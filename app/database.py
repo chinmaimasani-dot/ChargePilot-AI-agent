@@ -1,3 +1,4 @@
+
 import os
 
 from dotenv import load_dotenv
@@ -9,11 +10,8 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    raise RuntimeError(
-        "DATABASE_URL is missing. Add your Neon connection string to the .env file."
-    )
+    raise RuntimeError("DATABASE_URL is missing from .env")
 
-# SQLAlchemy uses the psycopg 3 driver installed by uv.
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace(
         "postgres://", "postgresql+psycopg://", 1
@@ -38,3 +36,11 @@ SessionLocal = sessionmaker(
 
 class Base(DeclarativeBase):
     pass
+
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
