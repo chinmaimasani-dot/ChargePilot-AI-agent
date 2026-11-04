@@ -4,17 +4,22 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.database import Base, DATABASE_URL
-from app.models import Vehicle  # Makes sure Vehicle is registered in Base.metadata
+from app.models import Vehicle
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Escape percent signs in URL-encoded Neon passwords for ConfigParser.
 config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
 
 target_metadata = Base.metadata
+
+
+def include_object(obj, name, type_, reflected, compare_to):
+    if type_ == "table":
+        return name == "vehicles"
+    return True
 
 
 def run_migrations_offline() -> None:
@@ -25,6 +30,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
+        include_object=include_object,
     )
 
     with context.begin_transaction():
@@ -43,6 +49,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
+            include_object=include_object,
         )
 
         with context.begin_transaction():
