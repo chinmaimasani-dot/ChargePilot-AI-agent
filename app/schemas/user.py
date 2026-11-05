@@ -12,6 +12,8 @@ class UserCreate(BaseModel):
     mobile: str = Field(pattern=r"^\d{10}$")
     dob: date = Field(serialization_format="%Y-%m-%d")
     email: EmailStr = Field(min_length=4, max_length=255)
+    vehicle_id: int | None = None
+    address_id: int | None = None
 
 
 class UserUpdate(BaseModel):
@@ -20,6 +22,8 @@ class UserUpdate(BaseModel):
     mobile: str | None = Field(default=None, pattern=r"^\d{10}$")
     dob: date | None = Field(default=None, serialization_format="%Y-%m-%d")
     email: EmailStr | None = Field(default=None, min_length=4, max_length=255)
+    vehicle_id: int | None = None
+    address_id: int | None = None
 
 
 class UserRead(BaseModel):
@@ -31,5 +35,7 @@ class UserRead(BaseModel):
     mobile: str
     dob: date
     email: EmailStr
+    vehicle_id: int | None
+    address_id: int | None
     created_at: datetime
     updated_at: datetime

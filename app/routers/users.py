@@ -9,6 +9,18 @@ from app.schemas.user import UserCreate, UserRead, UserUpdate
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 
 
+def _map_integrity_error(exc: IntegrityError) -> HTTPException:
+    if exc.orig is not None and exc.orig.__class__.__name__ == "ForeignKeyViolation":
+        return HTTPException(
+            status_code=400,
+            detail="Invalid vehicle_id or address_id: no such vehicle or address",
+        )
+    return HTTPException(
+        status_code=409,
+        detail="A user with this mobile or email already exists",
+    )
+
+
 @router.post(
     "",
     response_model=UserRead,
@@ -21,10 +33,7 @@ def create_user(user_data: UserCreate):
         try:
             session.commit()
         except IntegrityError as exc:
-            raise HTTPException(
-                status_code=409,
-                detail="A user with this mobile or email already exists",
-            ) from exc
+            raise _map_integrity_error(exc) from exc
         session.refresh(user)
         return user
 
@@ -70,10 +79,7 @@ def update_user(user_id: int, user_data: UserUpdate):
         try:
             session.commit()
         except IntegrityError as exc:
-            raise HTTPException(
-                status_code=409,
-                detail="A user with this mobile or email already exists",
-            ) from exc
+            raise _map_integrity_error(exc) from exc
         session.refresh(user)
         return user
 
