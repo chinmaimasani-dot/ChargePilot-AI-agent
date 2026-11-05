@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
 
+from app.routers.users import router as users_router
 from app.routers.vehicles import router as vehicles_router
 
 from app.charging_stations.models import Address, ChargingStation
@@ -13,6 +14,9 @@ app = FastAPI(
     version="1.0.0",
     description="Vehicle and Charging Station Management APIs.",
 )
+
+# User APIs
+app.include_router(users_router)
 
 # Vehicle APIs
 app.include_router(vehicles_router)
