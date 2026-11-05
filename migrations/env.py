@@ -6,7 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.database import Base, DATABASE_URL
 from app.models import Vehicle
-
+from app.slot_availability.models import SlotAvailability
 config = context.config
 
 if config.config_file_name is not None:
@@ -23,9 +23,9 @@ def include_object(obj, name, type_, reflected, compare_to):
             "vehicles",
             "addresses",
             "charging_stations",
+            "slots_availability",
         }
     return True
-
 
 
 def run_migrations_offline() -> None:
