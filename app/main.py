@@ -6,8 +6,9 @@ from app.routers.vehicles import router as vehicles_router
 from app.slot_availability.routers import router as slots_availability_router
 from app.charging_stations.models import Address, ChargingStation
 from app.charging_stations.routers.charging_stations import (
-    router as charging_stations_router,
-)
+    router as charging_stations_router,)
+from app.address_details.routers.address import router as address_router
+from app.address_details.models import address
 
 app = FastAPI(
     title="ChargePilot AI API",
