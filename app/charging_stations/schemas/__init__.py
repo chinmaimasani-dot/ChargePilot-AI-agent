@@ -1,4 +1,9 @@
-from app.charging_stations.schemas.address import AddressCreate, AddressResponse
+from app.charging_stations.schemas.address import (
+    AddressCreate,
+    AddressUpdate,
+    AddressResponse,
+)
+
 from app.charging_stations.schemas.charging_station import (
     ChargingStationCreate,
     ChargingStationUpdate,
@@ -7,6 +12,7 @@ from app.charging_stations.schemas.charging_station import (
 
 __all__ = [
     "AddressCreate",
+    "AddressUpdate",
     "AddressResponse",
     "ChargingStationCreate",
     "ChargingStationUpdate",

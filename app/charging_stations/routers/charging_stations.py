@@ -1,3 +1,5 @@
+
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -7,6 +9,7 @@ from app.charging_stations.database import (
 from app.charging_stations import crud
 from app.charging_stations.schemas import (
     AddressCreate,
+    AddressUpdate,
     AddressResponse,
     ChargingStationCreate,
     ChargingStationUpdate,
@@ -21,7 +24,7 @@ router = APIRouter(
 
 
 # --------------------------------
-# CREATE ADDRESS
+# ADDRESS APIs
 # --------------------------------
 
 @router.post(
@@ -36,8 +39,90 @@ def create_address(
     return crud.create_address(db, address_data)
 
 
+@router.get(
+    "/addresses",
+    response_model=list[AddressResponse],
+)
+def get_all_addresses(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    return crud.get_all_addresses(db, skip, limit)
+
+
+@router.get(
+    "/addresses/{address_id}",
+    response_model=AddressResponse,
+)
+def get_address(
+    address_id: int,
+    db: Session = Depends(get_db),
+):
+    address = crud.get_address(db, address_id)
+
+    if address is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Address not found",
+        )
+
+    return address
+
+
+@router.put(
+    "/addresses/{address_id}",
+    response_model=AddressResponse,
+)
+def update_address(
+    address_id: int,
+    address_data: AddressUpdate,
+    db: Session = Depends(get_db),
+):
+    address = crud.update_address(
+        db,
+        address_id,
+        address_data,
+    )
+
+    if address is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Address not found",
+        )
+
+    return address
+
+
+@router.delete(
+    "/addresses/{address_id}",
+)
+def delete_address(
+    address_id: int,
+    db: Session = Depends(get_db),
+):
+    address = crud.delete_address(db, address_id)
+
+    if address is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Address not found",
+        )
+
+    if address is False:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete address because it is linked to a charging station",
+        )
+
+    return {
+        "message": "Address deleted successfully",
+        "address_id": address_id,
+    }
+
+
 # --------------------------------
-# CREATE CHARGING STATION
+# CHARGING STATION APIs
 # --------------------------------
 
 @router.post(
@@ -60,10 +145,6 @@ def create_station(
     return station
 
 
-# --------------------------------
-# GET ALL CHARGING STATIONS
-# --------------------------------
-
 @router.get(
     "/stations",
     response_model=list[ChargingStationResponse],
@@ -75,10 +156,6 @@ def get_all_stations(
 ):
     return crud.get_all_stations(db, skip, limit)
 
-
-# --------------------------------
-# GET ONE CHARGING STATION
-# --------------------------------
 
 @router.get(
     "/stations/{station_id}",
@@ -98,10 +175,6 @@ def get_station(
 
     return station
 
-
-# --------------------------------
-# UPDATE CHARGING STATION
-# --------------------------------
 
 @router.put(
     "/stations/{station_id}",
@@ -127,13 +200,7 @@ def update_station(
     return station
 
 
-# --------------------------------
-# DELETE CHARGING STATION
-# --------------------------------
-
-@router.delete(
-    "/stations/{station_id}",
-)
+@router.delete("/stations/{station_id}")
 def delete_station(
     station_id: int,
     db: Session = Depends(get_db),
@@ -151,10 +218,6 @@ def delete_station(
         "station_id": station_id,
     }
 
-
-# --------------------------------
-# UPDATE STATION STATUS
-# --------------------------------
 
 @router.patch(
     "/stations/{station_id}/status",
