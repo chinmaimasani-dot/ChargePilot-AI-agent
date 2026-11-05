@@ -1,12 +1,13 @@
-
 from sqlalchemy.orm import Session
 
 from app.charging_stations.models import Address, ChargingStation
 from app.charging_stations.schemas import (
     AddressCreate,
+    AddressUpdate,
     ChargingStationCreate,
     ChargingStationUpdate,
 )
+
 
 # --------------------------------
 # ADDRESS CRUD OPERATIONS
@@ -22,10 +23,80 @@ def create_address(db: Session, address_data: AddressCreate):
     return new_address
 
 
+def get_all_addresses(
+    db: Session,
+    skip: int = 0,
+    limit: int = 10,
+):
+    return (
+        db.query(Address)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+
+
 def get_address(db: Session, address_id: int):
-    return db.query(Address).filter(
-        Address.id == address_id
-    ).first()
+    return (
+        db.query(Address)
+        .filter(Address.id == address_id)
+        .first()
+    )
+
+
+def update_address(
+    db: Session,
+    address_id: int,
+    address_data: AddressUpdate,
+):
+    address = get_address(db, address_id)
+
+    if not address:
+        return None
+
+    update_data = address_data.model_dump(exclude_unset=True)
+
+    # Required fields cannot be changed to None.
+    required_fields = {
+        "street",
+        "city",
+        "state",
+        "postal_code",
+        "country",
+    }
+
+    for field, value in update_data.items():
+        if field in required_fields and value is None:
+            continue
+
+        setattr(address, field, value)
+
+    db.commit()
+    db.refresh(address)
+
+    return address
+
+
+def delete_address(db: Session, address_id: int):
+    address = get_address(db, address_id)
+
+    if not address:
+        return None
+
+    # Do not delete an address linked to a charging station.
+    linked_station = (
+        db.query(ChargingStation)
+        .filter(ChargingStation.address_id == address_id)
+        .first()
+    )
+
+    if linked_station:
+        return False
+
+    db.delete(address)
+    db.commit()
+
+    return address
 
 
 # --------------------------------
@@ -34,17 +105,14 @@ def get_address(db: Session, address_id: int):
 
 def create_station(
     db: Session,
-    station_data: ChargingStationCreate
+    station_data: ChargingStationCreate,
 ):
-    # Check whether the address exists
     address = get_address(db, station_data.address_id)
 
     if not address:
         return None
 
-    new_station = ChargingStation(
-        **station_data.model_dump()
-    )
+    new_station = ChargingStation(**station_data.model_dump())
 
     db.add(new_station)
     db.commit()
@@ -56,7 +124,7 @@ def create_station(
 def get_all_stations(
     db: Session,
     skip: int = 0,
-    limit: int = 10
+    limit: int = 10,
 ):
     return (
         db.query(ChargingStation)
@@ -77,7 +145,7 @@ def get_station(db: Session, station_id: int):
 def update_station(
     db: Session,
     station_id: int,
-    station_data: ChargingStationUpdate
+    station_data: ChargingStationUpdate,
 ):
     station = get_station(db, station_id)
 
@@ -86,10 +154,9 @@ def update_station(
 
     update_data = station_data.model_dump(
         exclude_unset=True,
-        exclude_none=True
+        exclude_none=True,
     )
 
-    # If the address is changed, verify that it exists
     if "address_id" in update_data:
         address = get_address(db, update_data["address_id"])
 
@@ -120,7 +187,7 @@ def delete_station(db: Session, station_id: int):
 def update_station_status(
     db: Session,
     station_id: int,
-    is_active: bool
+    is_active: bool,
 ):
     station = get_station(db, station_id)
 
