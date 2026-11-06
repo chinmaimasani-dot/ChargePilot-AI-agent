@@ -1,0 +1,30 @@
+CHARGEPILOT AI - EV CHARGING STATION MANAGEMENT SYSTEM
+
+Project Overview:
+ChargePilot AI is an intelligent electric vehicle charging station management system. It helps customers find charging stations and check charging slot availability.
+
+Main Objectives:
+1. Display available EV charging stations.
+2. Provide charging station details.
+3. Check available slots for two-wheelers, three-wheelers, and four-wheelers.
+4. Help customers make informed charging decisions.
+5. Provide information about the project using a Retrieval-Augmented Generation (RAG) assistant.
+
+Technology Stack:
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Alembic
+- Groq Large Language Model
+- MCP (Model Context Protocol)
+- LangGraph
+
+RAG Information Assistant:
+The RAG assistant accepts PDF, DOCX, and TXT documents. It extracts text, splits the text into smaller chunks, retrieves relevant content using TF-IDF, and sends the retrieved context to a Groq language model to generate an answer.
+
+MCP Integration:
+The Model Context Protocol server exposes tools that can retrieve charging station information, station details, and available charging slots through the ChargePilot API.
+
+Important:
+The RAG assistant should answer questions using the uploaded project documents. It should not invent station availability, charging prices, or other information that is not present in the retrieved documents.
