@@ -7,7 +7,7 @@ from app.slot_availability.routers import router as slots_availability_router
 from app.charging_stations.models import Address, ChargingStation
 from app.charging_stations.routers.charging_stations import (
     router as charging_stations_router,)
-from app.address_details.routers.address import router as address_router
+from app.address_details.routers.address import api_router as address_router
 from app.address_details.models import address
 
 app = FastAPI(
@@ -21,6 +21,9 @@ app.include_router(users_router)
 
 # Vehicle APIs
 app.include_router(vehicles_router)
+
+# Vehicle APIs
+app.include_router(address_router)
 
 # Charging Station APIs
 app.include_router(charging_stations_router)
