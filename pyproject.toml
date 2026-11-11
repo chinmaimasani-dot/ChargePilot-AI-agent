@@ -6,9 +6,29 @@ dependencies = [
     "alembic>=1.20.1",
     "email-validator>=2.3.0",
     "fastapi>=0.162.0",
+    "langchain-openai>=1.0.0",
+    "langchain-text-splitters>=1.0.0",
+    "langgraph>=1.0.0",
+    "mcp>=2.2.0",
+    "pgvector>=0.4.0",
     "psycopg[binary]>=3.3.7",
+    "pypdf>=5.0.0",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.0.0",
     "pydantic-settings>=2.16.2",
+    "python-docx>=1.2.0",
     "python-dotenv>=1.2.4",
+    "sentence-transformers>=6.0.0",
     "sqlalchemy>=2.1.6",
     "uvicorn[standard]>=0.54.0",
 ]
+
+# Torch (pulled in by sentence-transformers) from the CPU-only index:
+# far smaller than the default CUDA build and sufficient for local embeddings.
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

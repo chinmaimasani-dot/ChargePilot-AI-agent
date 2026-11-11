@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI
 
+from app.api.chat import router as chat_router
 from app.routers.users import router as users_router
 from app.routers.vehicles import router as vehicles_router
 from app.slot_availability.routers import router as slots_availability_router
@@ -29,6 +30,9 @@ app.include_router(address_router)
 app.include_router(charging_stations_router)
 # Slot Availability APIs
 app.include_router(slots_availability_router)
+
+# GenAI Chat APIs (Member 4)
+app.include_router(chat_router)
 
 @app.get("/health", tags=["Health"])
 def health_check():

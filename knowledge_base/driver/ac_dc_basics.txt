@@ -1,0 +1,14 @@
+AC AND DC CHARGING BASICS
+
+AC charging (alternating current) uses the vehicle's onboard charger to
+convert AC power to DC. It is slower but gentler on the battery, making it
+suitable for overnight or long-duration parking. Typical AC power levels
+range from 3.3 kW to 22 kW.
+
+DC charging (direct current, also called fast charging) bypasses the
+onboard charger and feeds DC power directly to the battery. It is much
+faster, usually adding a significant charge in 30-60 minutes, but frequent
+DC fast charging can increase battery wear over time.
+
+For daily use, prefer AC charging and reserve DC fast charging for long
+trips or when time is limited.
