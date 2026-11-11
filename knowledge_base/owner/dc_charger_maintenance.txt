@@ -1,0 +1,15 @@
+DC CHARGER MAINTENANCE GUIDELINES
+
+DC fast chargers require periodic inspection of the power module cooling
+system. Check coolant levels monthly and replace coolant every 12 months.
+Inspect the charging cable and connector for cracks, burns or deformation
+before every shift. Clean the connector pins only with a dry, lint-free
+cloth; never use water or solvent inside the connector housing.
+
+Cabinet air filters must be cleaned every two weeks in dusty environments.
+Tighten all power terminals during the quarterly inspection. Firmware
+updates should be applied during maintenance windows, never during peak
+usage hours.
+
+If a DC charger trips repeatedly, log the fault code from the display and
+contact the operations desk. Do not restart a charger more than twice.

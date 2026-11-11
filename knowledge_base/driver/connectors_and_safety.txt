@@ -1,0 +1,15 @@
+CONNECTOR TYPES AND SAFETY
+
+Common connector types in India include:
+- CCS2 (Combined Charging System): the standard for DC fast charging on
+  most modern EVs.
+- Type 2 (Mennekes): the standard for AC charging on most modern EVs.
+- Bharat AC-001 and Bharat DC-001: older public chargers for early EVs.
+- CHAdeMO: used by some older EV models.
+
+Safety guidelines:
+- Never touch a connector pin; hold the plug body only.
+- Stop charging before unplugging.
+- Do not use a charging cable that is visibly damaged.
+- Report any burning smell, unusual noise or smoke, and move away from the
+  charger immediately.

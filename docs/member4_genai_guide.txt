@@ -1,0 +1,126 @@
+MEMBER 4 - GenAI PLATFORM, LANGGRAPH, MCP INTEGRATION AND RAG
+Implementation guide and integration contracts
+====================================================================
+
+1. WHAT IS IN THIS WORKSTREAM
+--------------------------------------------------------------------
+app/llm/            OpenRouter client, settings, safe error normalization.
+app/agents/shared/  Graph state, versioned prompts, common nodes, graph
+                    factory, ChatRuntime (role selection, memory, explicit
+                    confirmation workflow), conversation store interface.
+app/agents/owner/   Owner graph composition (framework only; Member 2 adds
+                    domain validation during workflow integration).
+app/agents/driver/  Driver graph composition (same pattern; booking
+                    confirmation pause/resume is built into the runtime).
+app/mcp/client/     MCP client manager, trusted-context propagation,
+                    LangChain tool adapters, output normalization.
+app/rag/            Extraction (PDF/DOCX/TXT), chunking, embeddings,
+                    pgvector persistence, role-filtered retrieval,
+                    ingestion pipeline + knowledge_documents metadata.
+app/api/chat.py     POST /api/chat chat orchestration endpoint.
+seed/ingest_knowledge.py   Knowledge base ingestion CLI.
+knowledge_base/     Sample owner/ and driver/ collections.
+tests/genai/        Offline unit + evaluation tests (41 tests).
+
+2. ENVIRONMENT VARIABLES (see .env.example)
+--------------------------------------------------------------------
+OPENROUTER_API_KEY      required for live LLM calls (https://openrouter.ai/keys)
+OPENROUTER_MODEL        default: openai/gpt-4o-mini (any OpenRouter model id)
+LLM_TIMEOUT_SECONDS     per-call timeout (60)
+LLM_MAX_RETRIES         retry policy (2)
+MAX_TOOL_CALL_ROUNDS    hard cap on the tool loop per turn (5)
+MCP_OWNER_SERVER_URL    Owner MCP server (Member 2) when deployed; empty = not yet
+MCP_DRIVER_SERVER_URL   Driver MCP server (Member 3) when deployed; empty = not yet
+RAG_SENTENCE_TRANSFORMERS_MODEL  local sentence-transformers model (all-MiniLM-L6-v2)
+RAG_EMBEDDING_DIMENSIONS         must match the model (all-MiniLM-L6-v2 = 384)
+RAG_CHUNK_SIZE / RAG_CHUNK_OVERLAP / RAG_TOP_K / RAG_MIN_SCORE
+
+Without OPENROUTER_API_KEY the system still boots and returns controlled
+"service unavailable" replies - never 500s with stack traces.
+
+3. CHAT API CONTRACT (agreed with Member 1)
+--------------------------------------------------------------------
+POST /api/chat
+  Headers (DEV SHIM until Member 1's JWT dependency lands):
+      X-User-Id: <verified user id>
+      X-User-Role: owner | driver
+      -> REPLACE with app.auth get_current_user before production.
+  Body:
+      {"conversation_id": "uuid|null", "message": "text",
+       "action": "send|confirm|reject", "proposal_id": "uuid|null"}
+  Response:
+      {"conversation_id", "reply", "route", "sources", "tool_results",
+       "pending_confirmation"}
+
+Confirmation workflow: a sensitive tool (requires_confirmation=True, e.g.
+Member 3's confirm_booking) is proposed, never executed, by the graph. The
+UI shows pending_confirmation and the app calls /api/chat with
+action=confirm|reject + proposal_id. Only that trusted transition executes
+the tool (identity re-derived from JWT context; availability rechecked
+inside the tool by the domain service).
+
+4. HOW MEMBERS 2 AND 3 CONNECT THEIR TOOLS
+--------------------------------------------------------------------
+Register executors on the shared manager (thin adapters over their domain
+services - no business logic in the tool itself):
+
+    from app.mcp.client.manager import manager
+
+    manager.register_server(MCPServerConfig(name="owner-mcp", role="owner", url=...))
+    manager.register_executor(
+        name="get_station_revenue",
+        role="owner",
+        description="Revenue for the acting owner's station(s).",
+        parameters_schema={...JSON schema...},
+        executor=my_service_adapter,          # (args, user_context) -> payload
+        requires_confirmation=False,
+    )
+
+Tool executors receive user_context={"user_id","role"} derived from the
+verified identity - the LLM cannot supply or override it. Role mismatch is
+blocked in the manager and again in execute_tools.
+
+5. RAG INGESTION / RE-INDEXING
+--------------------------------------------------------------------
+    python -m seed.ingest_knowledge                    # all of knowledge_base/
+    python -m seed.ingest_knowledge --audience driver  # one collection
+    python -m seed.ingest_knowledge --file doc.pdf --audience owner --title "T"
+
+Requires: migration applied (creates the vector extension and tables). The
+sentence-transformers model downloads on first use and runs locally on CPU.
+If you change RAG_SENTENCE_TRANSFORMERS_MODEL after ingesting, re-ingest and
+migrate the vector column to the new dimension. Retrieval is filtered by
+the audience column in SQL - a driver can never retrieve owner knowledge.
+Dynamic data (availability, pricing, sessions, bookings) never goes through
+RAG; those come from MCP/domain tools.
+
+6. DATABASE MIGRATION
+--------------------------------------------------------------------
+Revision dac2e54e4307 adds knowledge_documents + knowledge_chunks (pgvector,
+HNSW cosine index) on top of head 20261104_0001.
+
+NOTE: the repo currently has TWO heads (e1f85982ea49 and 20261104_0001
+lineage) - a pre-existing split that Member 1 should merge first:
+
+    python -m alembic merge heads -m "merge heads"   # coordinate with Member 1
+    python -m alembic upgrade head
+
+7. TESTS
+--------------------------------------------------------------------
+    python -m pytest tests/genai -q
+
+All tests are offline (scripted chat model, fake tools/embedder, in-memory
+conversation store). Coverage: routing fallback, role tool isolation,
+role-confusion/prompt-injection defence, bounded tool loop, provider-failure
+error hygiene, confirmation pause/confirm/reject/spoof attempts, chunking,
+retriever role filters + evidence threshold, MCP normalization.
+
+8. KNOWN LIMITS / NEXT STEPS
+--------------------------------------------------------------------
+- Chat auth is a dev shim; swap to Member 1's JWT dependency (marked TODO
+  in app/api/chat.py).
+- Conversation persistence is in-memory until Member 1's tables arrive;
+  swap point is app/agents/shared/context.py (set_conversation_store).
+- Owner/driver MCP servers register via config once Members 2/3 deliver
+  them; until then those routes fall back to general/RAG.
+- .gitignore excludes *.md - this guide is .txt on purpose.

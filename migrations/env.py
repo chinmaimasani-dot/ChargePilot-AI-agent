@@ -6,6 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.database import Base, DATABASE_URL
 from app.models import Vehicle
+from app.rag.models import KnowledgeChunk, KnowledgeDocument
 from app.slot_availability.models import SlotAvailability
 config = context.config
 
@@ -24,6 +25,9 @@ def include_object(obj, name, type_, reflected, compare_to):
             "addresses",
             "charging_stations",
             "slots_availability",
+            # Member 4 knowledge pipeline
+            "knowledge_documents",
+            "knowledge_chunks",
         }
     return True
 

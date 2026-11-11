@@ -1,0 +1,12 @@
+PRICING AND OPERATIONAL POLICY
+
+Charging prices are set per kWh and can differ between AC and DC chargers
+and between locations. Owners may update prices at any time through the
+assistant; the new price applies to sessions started after the change.
+
+Simulated revenue reporting counts only completed charging sessions in the
+selected date range. Cancelled or failed sessions are excluded from revenue
+but remain visible in session history.
+
+Marking a charger unavailable stops new sessions but does not affect
+sessions already in progress.
